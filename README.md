@@ -31,21 +31,20 @@ py.test test_assert.py
 ### Run a subset of test suite
 Sometimes we don't want to run the entire test suite. Pytest allows us to run specific tests. We can do it in 2 ways  
 * Grouping of test names by substring matching  
-* Grouping of tests by markers
-Currently, we have
-
-test_assert.py  
-&nbsp; &nbsp; &nbsp; &nbsp; test_method0
+* Grouping of tests by markers  
+Currently, we have  
+test_assert.py    
+&nbsp; &nbsp; &nbsp; &nbsp; test_method0  
 &nbsp; &nbsp; &nbsp; &nbsp; test_method1
 
-**Option 1) Run tests by substring matching**
-Here to run all tests having **method** in its name we have to run
+**Option 1) Run tests by substring matching**  
+Here to run all tests having **methods** in its name we have to run
 ```bash  
 py.test -k method -v
 -k <expression> is used to represent the substring to match
 -v increases the verbosity
 ```
-**Option 2) Run tests by markers**
+**Option 2) Run tests by markers**  
 Pytest allows us to set various attributes for the test methods using pytest markers, @pytest.mark
 Here we will apply different marker names to test methods and run specific tests based on marker names. We can define the markers on each test names by using
 ```bash  
@@ -54,7 +53,7 @@ Here we will apply different marker names to test methods and run specific tests
 _Example:_
 ```python  
 import pytest
-
+1
 @pytest.mark.group2
 def test_method0():
 	x, y = 5, 6
@@ -82,7 +81,20 @@ We can run the marked test by
 py.test -m <name>
 -m <name> mentions the marker name
 ```
-Run `py.test -m group1` will run the methods **test_method1()** and **test_method3()**
+Run `py.test -m group1` will run the methods **test_method1()** and **test_method3()**  
+&nbsp; **Register markers for your test suite**  
+```bash
+# pytest.ini
+[pytest]
+minversion = 6.1.0
+addopts = -ra -q
+testpaths = 
+	tests
+markers = 
+	group1: Mark as a group 01
+	group2: Mark as a group 02
+
+```
 
 ## Running Tests in parallel
 Usually, a test suite will have multiple test files and hundreds of test methods which will take a considerable amount of time to execute. Pytest allows us to run tests in parallel.  
@@ -99,10 +111,7 @@ py.test -n 4
 ## Pytest Fixtures
 ### Basic Fixtures
 Fixtures are used when we want to run some code before every test method. So instead of repeating the same code in every test we define fixtures. Usually, fixtures are used to initialize database connections, pass the base , etc
-A method is marked as a fixture by marking with
-```bash
-@pytest.fixture
-```  
+A method is marked as a fixture by marking with `@pytest.fixture`    
 A test method can use a fixture by mentioning the fixture as an input parameter.
 ```python
 import pytest
@@ -133,7 +142,7 @@ Each of the test function has an input argument whose name is matching with an a
 
 ### Using Fixtures against multiple test files 
 ## Parameterized tests
-The purpose of parameterizing a test is to run a test against multiple sets of arguments. We can do this by @pytest.mark.parametrize.  
+The purpose of parameterizing a test is to run a test against multiple sets of arguments. We can do this by `@pytest.mark.parametrize`
 We will see this with the below example. Here we will pass 3 arguments to a test method. This test method will add the first 2 arguments and compare it with the 3rd argument.  
 Create the test file test_addition.py with the below code
 ```python
