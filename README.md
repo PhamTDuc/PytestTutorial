@@ -1,12 +1,12 @@
 # PytestTutorial
-## PyTest General
-### Installation
+
+## Installation
 ```bash
 python -m pip install pytest==2.9.1
 ```
 **2.9.1** is the pytest **version** will be installed
 
-#### Reading Pytest Output
+### Reading Pytest Output
 
 &nbsp; &nbsp; &nbsp; &nbsp; **F** say failure
 
@@ -16,8 +16,8 @@ python -m pip install pytest==2.9.1
 >&nbsp; _By default pytest only identifies the file names starting with test_ or ending with _test as the test files. We can explicitly mention other filenames though (explained later)_  
 >&nbsp; _Pytest requires the test method names to start with "test." All other method names will be ignored even if we explicitly ask to run those methods_
 
-### Running Tests
-#### From a specific file and multiple files.
+## Running Tests
+### From a specific file and multiple files.
 Inside folder tests/ we have test_assert.py. To run all tests inside that folder, from root directory
 ```bash
 cd tests
@@ -28,16 +28,16 @@ To run test from a specific file
 ```bash
 py.test test_assert.py
 ```
-#### Run a subset of test suite
+### Run a subset of test suite
 Sometimes we don't want to run the entire test suite. Pytest allows us to run specific tests. We can do it in 2 ways  
 * Grouping of test names by substring matching  
 * Grouping of tests by markers
 Currently, we have
-```bash  
-* test_assert.py
- * test_method0
- * test_method1
-```
+
+test_assert.py  
+&nbsp; &nbsp; &nbsp; &nbsp; test_method0
+&nbsp; &nbsp; &nbsp; &nbsp; test_method1
+
 **Option 1) Run tests by substring matching**
 Here to run all tests having **method** in its name we have to run
 ```bash  
@@ -97,6 +97,7 @@ py.test -n 4
 ```
 
 ## Pytest Fixtures
+### Basic Fixtures
 Fixtures are used when we want to run some code before every test method. So instead of repeating the same code in every test we define fixtures. Usually, fixtures are used to initialize database connections, pass the base , etc
 A method is marked as a fixture by marking with
 ```bash
@@ -128,6 +129,50 @@ Here we have
 * A fixture named supply_AA_BB_CC. This method will return a list of 3 values.  
 * 3 test methods comparing against each of the values.  
 Each of the test function has an input argument whose name is matching with an available fixture. Pytest then invokes the corresponding fixture method and the returned values will be stored in the input argument , here the list [25,35,45]. Now the list items are being used in test methods for the comparison.  
-> The fixture method has a _scope only within that test file_ it is defined. If we try to access the fixture in some other test file , we will get an error saying fixture 'supply_AA_BB_CC' not found for the test methods in other files.
+> _The fixture method has a _**scope only within that test file**_ it is defined. If we try to access the fixture in some other test file , we will get an error saying fixture 'supply_AA_BB_CC' not found for the test methods in other files._
 
-#### Using Fixtures against multiple test files 
+### Using Fixtures against multiple test files 
+## Parameterized tests
+The purpose of parameterizing a test is to run a test against multiple sets of arguments. We can do this by @pytest.mark.parametrize.  
+We will see this with the below example. Here we will pass 3 arguments to a test method. This test method will add the first 2 arguments and compare it with the 3rd argument.  
+Create the test file test_addition.py with the below code
+```python
+import pytest
+@pytest.mark.parametrize("input1, input2, output",[(5,5,10),(3,5,12)])
+def test_add(input1, input2, output):
+	assert input1+input2 == output,"Failed"
+```
+Here the test method accepts 3 arguments- input1, input2, output. It adds input1 and input2 and compares against the output.  
+Let's run the test by py.test -k test_add -v and see the result
+```bash
+test_addition.py::test_add[5-5-10] PASSED                                                                                                                                                                       
+test_addition.py::test_add[3-5-12] FAILED                                                                                                                                                                                              
+============================================== FAILURES ==============================================
+__________________________________________ test_add[3-5-12] __________________________________________
+input1 = 3, input2 = 5, output = 12
+    @pytest.mark.parametrize("input1, input2, output",[(5,5,10),(3,5,12)])
+    def test_add(input1, input2, output):
+>   	assert input1+input2 == output,"failed"
+E    AssertionError: failed
+E    assert (3 + 5) == 12
+test_addition.py:5: AssertionError
+```
+As you can see the tests ran 2 times – one checking 5+5 ==10 and other checking 3+5 ==12  
+&nbsp; &nbsp; test_addition.py::test_add[5-5-10] PASSED  
+&nbsp; &nbsp; test_addition.py::test_add[3-5-12] FAILED 
+
+## XFail/ Skip tests  
+There will be some situations where we don't want to execute a test, or a test case is not relevant for a particular time. In those situations, we have the option to xfail the test or skip the tests  
+The xfailed test will be executed, but it will not be counted as part failed or passed tests. There will be no traceback displayed if that test fails. We can xfail tests using  
+```bash
+@pytest.mark.xfail
+```
+Skipping a test means that the test will not be executed. We can skip tests using
+```bash
+@pytest.mark.skip
+```
+## Results in XML
+We can create test results in XML format which we can feed to **Continuous Integration** servers for further processing
+```bash
+py.test test_assert.py -v --junitxml="result.xml"
+```
