@@ -1,4 +1,4 @@
-# PytestTutorial
+# Pytest Tutorial
 
 ## Installation
 ```bash
@@ -6,10 +6,8 @@ python -m pip install pytest==2.9.1
 ```
 **2.9.1** is the pytest **version** will be installed
 
-### Reading Pytest Output
-
-&nbsp; &nbsp; &nbsp; &nbsp; **F** say failure
-
+### Reading Pytest Output  
+&nbsp; &nbsp; &nbsp; &nbsp; **F** say failure  
 &nbsp; &nbsp; &nbsp; &nbsp; **Dot(.)** says success
 
 >**How pytest identifies the test files and test methods**  
@@ -140,7 +138,77 @@ Here we have
 Each of the test function has an input argument whose name is matching with an available fixture. Pytest then invokes the corresponding fixture method and the returned values will be stored in the input argument , here the list [25,35,45]. Now the list items are being used in test methods for the comparison.  
 > _The fixture method has a _**scope only within that test file**_ it is defined. If we try to access the fixture in some other test file , we will get an error saying fixture 'supply_AA_BB_CC' not found for the test methods in other files._
 
-### Using Fixtures against multiple test files 
+### Using Fixtures against multiple test files `conftest.py`  
+If during implementing your tests you realize that you want to use a fixture function from multiple test files you can move it to a  `conftest.py`  file. You don’t need to import the fixture you want to use in a test, it automatically gets discovered by pytest. The discovery of fixture functions starts at test classes, then test modules, then  `conftest.py`  files and finally builtin and third party plugins.  
+You can also use the  `conftest.py`  file to implement  [local per-directory plugins](https://docs.pytest.org/en/stable/writing_plugins.html#conftest-py-plugins).
+### Fixtures Scope
+we can add a `scope="module"` parameter to the [`@pytest.fixture`](https://docs.pytest.org/en/stable/reference.html#pytest.fixture "pytest.fixture") invocation to cause the decorated `smtp_connection` fixture function to only be invoked once per test _module. Possible values for `scope` are: `function`, `class`, `module`, `package` or `session`
+```python
+# content of conftest.py
+import pytest
+import smtplib
+
+@pytest.fixture(scope="module")
+def smtp_connection():
+    return smtplib.SMTP("smtp.gmail.com", 587, timeout=5)
+```
+### Fixture Scopes
+Fixtures are created when first requested by a test, and are destroyed based on their  `scope`:  
+-   `function`: the default scope, the fixture is destroyed at the end of the test.
+    
+-   `class`: the fixture is destroyed during teardown of the last test in the class.
+    
+-   `module`: the fixture is destroyed during teardown of the last test in the module.
+    
+-   `package`: the fixture is destroyed during teardown of the last test in the package.
+    
+-   `session`: the fixture is destroyed at the end of the test session.
+```python
+# Higher-scoped fixtures are instantiated first
+# fixtures documentation order example
+order = []
+
+@pytest.fixture(scope="session")
+def s1():
+    order.append("s1")
+    
+@pytest.fixture(scope="module")
+def m1():
+    order.append("m1")
+    
+@pytest.fixture
+def f1(f3):
+    order.append("f1")
+    
+@pytest.fixture
+def f3():
+    order.append("f3")
+    
+@pytest.fixture(autouse=True)
+def a1():
+    order.append("a1")
+    
+@pytest.fixture
+def f2():
+    order.append("f2")
+    
+def test_order(f1, m1, f2, s1):
+    assert order == ["s1", "m1", "a1", "f3", "f1", "f2"]
+```
+### Fixture finalization / executing teardown code
+```python
+# content of conftest.py
+
+import smtplib
+import pytest
+
+@pytest.fixture(scope="module")
+def smtp_connection():
+    smtp_connection = smtplib.SMTP("smtp.gmail.com", 587, timeout=5)
+    yield smtp_connection  # provide the fixture value
+    print("teardown smtp")
+    smtp_connection.close()
+```
 ## Parameterized tests
 The purpose of parameterizing a test is to run a test against multiple sets of arguments. We can do this by `@pytest.mark.parametrize`
 We will see this with the below example. Here we will pass 3 arguments to a test method. This test method will add the first 2 arguments and compare it with the 3rd argument.  
